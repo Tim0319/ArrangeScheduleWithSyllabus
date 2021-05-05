@@ -169,74 +169,12 @@ print(list(x)[30:100])
 '''
 
 
-
-# 安排排班的总程序
-def arrange(bgwk,bgdy,edwk,eddy,people):
-    None
-
 # 安排傍晚值班的程序
+'''
 def arrange_evening(bgwk,bgdy,edwk,eddy,people):
-    None
-
-
-# 计算全天值班的合适概率
-def suit_wholeday_value(mem, num, week, day):
-    output = 100
-    if num == 0:#8-10
-        if mem in lis_busy[week][day][0]:
-            output = 0
-        elif mem in lis_busy[week][day][1]:
-            output -= 10
-    elif num == 1:#10-12
-        if mem in lis_busy[week][day][1]:
-            output = 0
-        elif mem in lis_busy[week][day][0]:
-            output -= 10
-    elif num == 2:#12-before class 56
-        if mem in lis_busy[week][day][1]:
-            output -= 10
-        if mem in lis_busy[week][day][2]:
-            output -= 10
-    elif num == 3:#class5-6
-        if mem in lis_busy[week][day][2]:
-            output = 0
-        elif mem in lis_busy[week][day][3]:
-            output -= 10
-    elif num == 4:#class7-8
-        if mem in lis_busy[week][day][3]:
-            output = 0
-        elif mem in lis_busy[week][day][2]:
-            output -= 10
-    elif num == 5:#after class78
-        if mem in lis_busy[week][day][3]:
-            output -= 10
-        if mem in lis_busy[week][day][4]:
-            output -= 10
-    return output
-
-
-# 判断子列表是否含有某元素
-def if_in_list(k, lis):
-    state = 0
-    for i in lis:
-        if k in i:
-            state = 1
-    if state == 1:
-        return True
-    else:
-        return False
-
-# 安排整天的程序
-def arrange_wholeday(bgwk,bgdy,edwk,eddy,people,ifdawn):
-    print("开始安排")
-    if ifdawn == 1:
-        block = 6
-    else:
-        block = 5
-
     print("step1 计算人均工作最大次数：", end='')
     days = (edwk-bgwk)*7+eddy-bgdy+1
-    average_timesum = math.ceil(block * days * people / len(info))
+    average_timesum = math.ceil(days * people / len(info))
     print(average_timesum)
     weekday_cal = []
     wk = bgwk
@@ -317,12 +255,168 @@ def arrange_wholeday(bgwk,bgdy,edwk,eddy,people,ifdawn):
     filename = input("step6 请输入保存的文件名:")
     wb_wholeday.save('./'+filename+'.xls')
     print("Succcessful")
+'''
+
+# 计算全天值班的合适概率
+def suit_wholeday_value(mem, num, week, day):
+    output = 100
+    if num == 0:#8-10
+        if mem in lis_busy[week][day][0]:
+            output = 0
+        elif mem in lis_busy[week][day][1]:
+            output -= 10
+    elif num == 1:#10-12
+        if mem in lis_busy[week][day][1]:
+            output = 0
+        elif mem in lis_busy[week][day][0]:
+            output -= 10
+    elif num == 2:#12-before class 56
+        if mem in lis_busy[week][day][1]:
+            output -= 10
+        if mem in lis_busy[week][day][2]:
+            output -= 10
+    elif num == 3:#class5-6
+        if mem in lis_busy[week][day][2]:
+            output = 0
+        elif mem in lis_busy[week][day][3]:
+            output -= 10
+    elif num == 4:#class7-8
+        if mem in lis_busy[week][day][3]:
+            output = 0
+        elif mem in lis_busy[week][day][2]:
+            output -= 10
+    elif num == 5:#after class78
+        if mem in lis_busy[week][day][3]:
+            output -= 10
+        if mem in lis_busy[week][day][4]:
+            output -= 10
+    return output
+
+
+# 判断子列表是否含有某元素
+def if_in_list(k, lis):
+    state = 0
+    for i in lis:
+        if k in i:
+            state = 1
+    if state == 1:
+        return True
+    else:
+        return False
+
+
+# 安排整天的程序
+def arrange_wholeday(bgwk,bgdy,edwk,eddy,people,ifdawn):
+    print("开始安排")
+    if ifdawn == 1:
+        block = 6
+    else:
+        block = 5
+
+    print("step1 计算人均工作最大次数：", end='')
+    days = (edwk-bgwk)*7+eddy-bgdy+1
+    average_timesum = math.ceil(block * days * people / len(info))
+    print(average_timesum)
+    weekday_cal = []
+    wk = bgwk
+    dy = bgdy
+    for i in range(days):
+        temp_weekday_cal = (wk,dy)#week,day
+        if dy == 6:
+            dy = 0
+            wk += 1
+        else:
+            dy += 1
+        weekday_cal.append(temp_weekday_cal)
+    print("step2 新建列表")
+    #ws_wholeday.write(0, 0, label='')
+    list_wholeday = []# 表格
+    list_pre = []
+    for i in range(days):
+        list_wholeday.append([])
+        list_pre.append({})
+    list_used = {}# 统计已经安排过的人的次数以及时间
+    for i in info:
+        list_used[i] = 0
+    # 预统计
+    for i in range(len(list_wholeday)):
+        for j in range(block):
+            temp_dict_peo = {}
+            for k in info:
+                temp_dict_peo[k]=suit_wholeday_value(k,j,weekday_cal[i][0],weekday_cal[i][1])
+            list_pre[i][j] = temp_dict_peo
+    print("step3 开始第一次安排")
+    # 开始遍历每一天
+    for i in range(len(list_wholeday)):
+        # 遍历每一天当中的时间段
+        for j in range(block):
+            temp_dict = {}
+            temp_peo = []
+            if_arrange = 0
+            # 遍历预统计当中的人
+            for p in range(people):
+
+                for k in sorted(list_pre[i][j]):
+                    # 判断100的人以及未安排到的人
+                    if list_pre[i][j][k] >= 60 and list_used[k] < average_timesum \
+                            and not k in temp_peo and not if_in_list(k,list_wholeday[i]):
+                        temp_peo.append(k)
+                        list_used[k] += 1
+                        if_arrange = 1
+                        break
+                if if_arrange == 0:
+                    temp_peo.append(' ')
+                if_arrange = 0
+            list_wholeday[i].append(temp_peo)
+    #print(list_wholeday)
+    print("step4 开始第二次安排")
+
+    print("step5 开始写入信息")
+    wb_wholeday = xlwt.Workbook(encoding='ascii')
+    ws_wholeday = wb_wholeday.add_sheet('值班表')
+    ws_times = wb_wholeday.add_sheet("值班次数统计")
+    for i in range(len(tab)):
+        ws_times.write(i, 0, label=info[i])
+        ws_times.write(i, 1, label=list_used[info[i]])
+    ws_wholeday.write(0, 0, label='周数星期')
+    ws_wholeday.write(0, 1, label='时间段')
+    ws_wholeday.write(0, 2, label='人员')
+    for i in range(days):
+        ws_wholeday.write(i * block + 1, 0, label='第'+str(weekday_cal[i][0]+1)+'周 星期'+str(weekday_cal[i][1]+1))
+        ws_wholeday.write(i * block + 1, 1, label='8:00-10:00')
+        ws_wholeday.write(i * block + 2, 1, label='10:00-12:00')
+        ws_wholeday.write(i * block + 3, 1, label='12:00-下午课前')
+        ws_wholeday.write(i * block + 4, 1, label='下午56节课时间段')
+        ws_wholeday.write(i * block + 5, 1, label='下午78节课时间段')
+        if block == 6:
+            ws_wholeday.write(i * block + 6, 1, label='下午78节课后-傍晚')
+        for j in range(len(list_wholeday[i])):
+            for k in range(len(list_wholeday[i][j])):
+                ws_wholeday.write(i * block + 1 + j, k+2, label=list_wholeday[i][j][k])
+
+    filename = input("step6 请输入保存的文件名:")
+    wb_wholeday.save('./'+filename+'.xls')
+    print("Succcessful")
 
 
 # 转换4个输入时间为输出的四个字符
-def time_convert():
+def time_convert1():
     try:
-        temp = input("请以空格分隔来输入，输入完成后回车\n开始周数 开始星期数 结束周数 结束星期数 单词人数 是否需要下午课以后（是1 否0）\n请输入:")
+        temp = input("请以空格分隔来输入，输入完成后回车\n开始周数 开始星期数 结束周数 结束星期数 单次人数\n请输入:")
+        temp = temp.split(" ")
+        a = eval(temp[0])-1
+        b = eval(temp[1])-1
+        c = eval(temp[2])-1
+        d = eval(temp[3])-1
+        e = eval(temp[4])
+        return a, b, c, d, e
+    except:
+        print("输入错误")
+
+# 转换4个输入时间为输出的四个字符
+def time_convert2():
+    try:
+        temp = input("请以空格分隔来输入，输入完成后回车\n开始周数 开始星期数 结束周数 结束星期数 单次人数 是否需要下午课以后（是1 否0）\n请输入:")
         temp = temp.split(" ")
         a = eval(temp[0])-1
         b = eval(temp[1])-1
@@ -339,11 +433,12 @@ def main():
     choice = input("请输入数字后回车进行选择\n1 安排傍晚值班\n2 安排全天值班\n3 退出\n请输入:")
     if choice == '1':
         print("安排傍晚值班")
-        (a,b,c,d,e,f)=time_convert()
-        arrange_evening(a,b,c,d,e,f)
+        #(a,b,c,d,e)=time_convert1()
+        #arrange_evening(a,b,c,d,e)
+        print("此功能还在开发中，敬请期待")
     elif choice == '2':
         print("安排全天值班")
-        (a,b,c,d,e,f)=time_convert()
+        (a,b,c,d,e,f)=time_convert2()
         arrange_wholeday(a,b,c,d,e,f)
     elif choice == '3':
         quit()
