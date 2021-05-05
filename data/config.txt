@@ -1,0 +1,17 @@
+version="1.0"
+period=winter
+month=
+time0102=08:00-09:40
+time0304=10:00-11:40
+time0506=13:30-15:10
+time0708=15:30-17:10
+time0910=
+time1112=
+period=summer
+month=
+time0102=08:00-09:40
+time0304=10:00-11:40
+time0506=13:30-15:10
+time0708=15:30-17:10
+time0910=
+time1112=
